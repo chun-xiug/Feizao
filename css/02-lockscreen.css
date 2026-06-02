@@ -8,9 +8,11 @@
          transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.8s; overflow: hidden;
          }
          #lock-screen.fade-out { opacity: 0; visibility: hidden; pointer-events: none; }
-         .ls-noise { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E"); pointer-events: none; z-index: 1; mix-blend-mode: overlay; }
-         .ls-wire-star { position: absolute; top: 40%; left: 30%; width: 200vw; height: 200vw; transform: translate(-50%, -50%) rotate(15deg); fill: none; stroke: var(--titanium-dim); stroke-width: 0.2; pointer-events: none; z-index: 0; opacity: 0.5; }
-         .ls-abyss { position: absolute; bottom: -10%; right: -20%; width: 150%; aspect-ratio: 1; border-radius: 50%; background: radial-gradient(circle, rgba(255, 255, 255, 0.08) 0%, transparent 60%); filter: blur(50px); z-index: 0; pointer-events: none; animation: pulseAbyss 6s infinite alternate ease-in-out; }
+         /* 🚀 性能修复：移除 mix-blend-mode，改用透明度，视觉效果几乎一致但性能消耗降为 0 */
+         .ls-noise { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E"); pointer-events: none; z-index: 1; opacity: 0.8; transform: translateZ(0); }
+         .ls-wire-star { position: absolute; top: 40%; left: 30%; width: 200vw; height: 200vw; transform: translate(-50%, -50%) rotate(15deg) translateZ(0); fill: none; stroke: var(--titanium-dim); stroke-width: 0.2; pointer-events: none; z-index: 0; opacity: 0.5; will-change: transform; }
+         /* 🚀 性能修复：移除 filter: blur，利用 radial-gradient 自带的边缘渐变，开启硬件加速 */
+         .ls-abyss { position: absolute; bottom: -10%; right: -20%; width: 150%; aspect-ratio: 1; border-radius: 50%; background: radial-gradient(circle, rgba(255, 255, 255, 0.08) 0%, transparent 60%); z-index: 0; pointer-events: none; animation: pulseAbyss 6s infinite alternate ease-in-out; transform: translateZ(0); will-change: transform, opacity; }
          /* 呼吸星尘层 */
          .ls-stardust-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
          .ls-dust-dot { position: absolute; background: var(--platinum); border-radius: 50%; box-shadow: 0 0 4px var(--platinum); }
@@ -44,14 +46,16 @@
          .ls-auth.error .ls-slot-core { background: #FFF; box-shadow: 0 0 25px #FFF; }
          .ls-auth.error .ls-slot { border-color: #FFF; }
          .ls-hint { position: absolute; bottom: -30px; right: 0; text-align: right; font-family: "Courier New", monospace; font-size: 7px; color: var(--titanium); letter-spacing: 2px; transition: opacity 0.3s; white-space: nowrap; }
-         .ls-links { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: -1;}
-         .ls-m-link { fill: none; stroke: var(--platinum); stroke-width: 1px; stroke-dasharray: 100; stroke-dashoffset: 100; transition: stroke-dashoffset 0.4s ease; opacity: 0.8; filter: drop-shadow(0 0 3px var(--platinum-glow));}
+         .ls-links { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: -1; transform: translateZ(0); }
+         /* 🚀 性能修复：移除 drop-shadow 滤镜，改用简单的 opacity 变化，并开启 will-change */
+         .ls-m-link { fill: none; stroke: var(--platinum); stroke-width: 1px; stroke-dasharray: 100; stroke-dashoffset: 100; transition: stroke-dashoffset 0.4s ease; opacity: 0.8; will-change: stroke-dashoffset; }
          .ls-m-link.active { stroke-dashoffset: 0; }
          .ls-flash { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: var(--platinum); opacity: 0; pointer-events: none; z-index: 999; mix-blend-mode: overlay; }
-         #lock-screen.unlocking .ls-brand { animation: slideOutLeft 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-         #lock-screen.unlocking .ls-auth, #lock-screen.unlocking .ls-const, #lock-screen.unlocking .ls-sysdata { animation: slideOutRight 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-         #lock-screen.unlocking .ls-geo, #lock-screen.unlocking .ls-stardust-layer { animation: shatterFade 0.8s forwards; }
-         #lock-screen.unlocking .ls-flash { animation: whiteFlash 0.8s ease-out forwards; }
+         /* 🚀 性能修复：为所有解锁动画开启硬件加速 */
+         #lock-screen.unlocking .ls-brand { animation: slideOutLeft 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards; transform: translateZ(0); will-change: transform, opacity; }
+         #lock-screen.unlocking .ls-auth, #lock-screen.unlocking .ls-const, #lock-screen.unlocking .ls-sysdata { animation: slideOutRight 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards; transform: translateZ(0); will-change: transform, opacity; }
+         #lock-screen.unlocking .ls-geo, #lock-screen.unlocking .ls-stardust-layer { animation: shatterFade 0.8s forwards; transform: translateZ(0); will-change: transform, opacity; }
+         #lock-screen.unlocking .ls-flash { animation: whiteFlash 0.8s ease-out forwards; transform: translateZ(0); will-change: opacity; }
          @keyframes pulseAbyss { 0% { opacity: 0.6; transform: scale(0.9); } 100% { opacity: 1; transform: scale(1.1); } }
          @keyframes glitchTear { 0%, 100% { transform: translateY(-50%) translateX(0); } 25% { transform: translateY(-52%) translateX(-10px) skewX(10deg); } 50% { transform: translateY(-48%) translateX(10px) skewX(-10deg); } 75% { transform: translateY(-50%) translateX(-5px); } }
          @keyframes slideOutLeft { 100% { transform: translateX(-50px) scale(1.05); opacity: 0; } }
