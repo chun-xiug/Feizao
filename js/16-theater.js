@@ -1003,6 +1003,21 @@ ${wbTop}
                              } catch(e) {}
                          }
                      }
+                     
+                     if (streamBuffer) {
+                         const trimmed = streamBuffer.trim();
+                         if (trimmed.startsWith('data: ')) {
+                             const jsonStr = trimmed.replace('data: ', '').trim();
+                             if (jsonStr !== '[DONE]') {
+                                 try {
+                                     const parsed = JSON.parse(jsonStr);
+                                     const delta = parsed.choices?.[0]?.delta?.content || '';
+                                     rawReply += delta;
+                                 } catch(e) {}
+                             }
+                         }
+                     }
+                     
                      rawReply = rawReply.trim(); 
                  } else {
                      // 🚀 非流式处理：一次性解析全部 JSON 返回
@@ -1028,10 +1043,10 @@ ${wbTop}
                  }
 
                  // 2. 核心剥离逻辑：精准切除 <mind> 块，保留其他文字
-                 let cleanReply = rawReply.replace(/<mind>[\s\S]*?(?:<\/mind>|$)/gi, '');
+                 let cleanReply = rawReply.replace(/<mind>[\s\S]*?<\/mind>/gi, '');
                  
                  // 3. 冗余标签清理：防止 AI 脑抽输出了主线的标签
-                 cleanReply = cleanReply.replace(/<(?:thought|focus|facade|restraint|bpm|affection|mood|split|react|send_[a-z_]+)>[\s\S]*?(?:<\/(?:thought|focus|facade|restraint|bpm|affection|mood|split|react|send_[a-z_]+)>|$)/gi, '');
+                 cleanReply = cleanReply.replace(/<(thought|focus|facade|restraint|bpm|affection|mood|split|react|send_[a-z_]+)>[\s\S]*?<\/\1>/gi, '');
                  
                  // 4. 清除任何残留的孤立 HTML 标签
                  cleanReply = cleanReply.replace(/<[^>]+>/g, '').trim();

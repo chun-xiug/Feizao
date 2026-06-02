@@ -406,3 +406,29 @@ function triggerUnlock() {
          }
          
          function clearHomeBg() { document.getElementById('me-home-bg-data').value = ''; document.getElementById('me-home-bg-preview').innerHTML = '点击上传'; saveGlobal(); }
+
+         function toggleAiImageInputs() {
+             const type = document.getElementById('api-image-type').value;
+             const authGroup = document.getElementById('ai-image-auth-group');
+             const urlGroup = document.getElementById('ai-image-url-group');
+             const modelOpenAI = document.getElementById('ai-image-model-group-openai');
+             const modelNovelAI = document.getElementById('ai-image-model-group-novelai');
+             const negGroup = document.getElementById('ai-image-negative-group');
+             
+             if (type === 'pollinations') {
+                 authGroup.style.display = 'none';
+                 negGroup.style.display = 'none';
+             } else if (type === 'openai') {
+                 authGroup.style.display = 'block';
+                 urlGroup.style.display = ''; // 恢复默认显示
+                 modelOpenAI.style.display = '';
+                 modelNovelAI.style.display = 'none';
+                 negGroup.style.display = 'none';
+             } else if (type === 'novelai') {
+                 authGroup.style.display = 'block';
+                 urlGroup.style.display = 'none'; // NovelAI 隐藏 URL 输入框
+                 modelOpenAI.style.display = 'none';
+                 modelNovelAI.style.display = '';
+                 negGroup.style.display = 'block';
+             }
+         }

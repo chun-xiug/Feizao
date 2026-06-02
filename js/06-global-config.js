@@ -26,6 +26,16 @@
              document.getElementById('api-temp').value = gConfig.temperature !== undefined ? gConfig.temperature : 0.7;
              if(document.getElementById('temp-val')) document.getElementById('temp-val').innerText = gConfig.temperature !== undefined ? gConfig.temperature : 0.7;
              
+             if(document.getElementById('setting-ai-image')) document.getElementById('setting-ai-image').checked = gConfig.enableAiImage === true;
+             if(document.getElementById('api-image-type')) document.getElementById('api-image-type').value = gConfig.aiImageType || 'pollinations';
+             if(document.getElementById('api-image-url')) document.getElementById('api-image-url').value = gConfig.aiImageUrl || '';
+             if(document.getElementById('api-image-key')) document.getElementById('api-image-key').value = gConfig.aiImageKey || '';
+             if(document.getElementById('api-image-model-openai')) document.getElementById('api-image-model-openai').value = gConfig.aiImageModelOpenAI || 'dall-e-3';
+             if(document.getElementById('api-image-model-novelai')) document.getElementById('api-image-model-novelai').value = gConfig.aiImageModelNovelAI || 'nai-diffusion-3';
+             if(document.getElementById('api-image-prompt')) document.getElementById('api-image-prompt').value = gConfig.aiImagePrompt || '';
+             if(document.getElementById('api-image-negative-prompt')) document.getElementById('api-image-negative-prompt').value = gConfig.aiImageNegativePrompt || '';
+             if(typeof toggleAiImageInputs === 'function') toggleAiImageInputs();
+             
              if(document.getElementById('me-bubble-css')) document.getElementById('me-bubble-css').value = gConfig.bubbleCss;
              // 🚀 核心修复：不再在全局初始化时覆盖联系人设置页的 CSS 框，保持独立性
          
@@ -166,6 +176,14 @@ gConfig.enableStream = document.getElementById('setting-stream').checked;
          gConfig.contextSize = parseInt(document.getElementById('api-context').value) || 0;
          gConfig.temperature = parseFloat(document.getElementById('api-temp').value);
          if(isNaN(gConfig.temperature)) gConfig.temperature = 0.7;
+         if(document.getElementById('setting-ai-image')) gConfig.enableAiImage = document.getElementById('setting-ai-image').checked;
+         if(document.getElementById('api-image-type')) gConfig.aiImageType = document.getElementById('api-image-type').value;
+         if(document.getElementById('api-image-url')) gConfig.aiImageUrl = document.getElementById('api-image-url').value.trim();
+         if(document.getElementById('api-image-key')) gConfig.aiImageKey = document.getElementById('api-image-key').value.trim();
+         if(document.getElementById('api-image-model-openai')) gConfig.aiImageModelOpenAI = document.getElementById('api-image-model-openai').value.trim();
+         if(document.getElementById('api-image-model-novelai')) gConfig.aiImageModelNovelAI = document.getElementById('api-image-model-novelai').value;
+         if(document.getElementById('api-image-prompt')) gConfig.aiImagePrompt = document.getElementById('api-image-prompt').value.trim();
+         if(document.getElementById('api-image-negative-prompt')) gConfig.aiImageNegativePrompt = document.getElementById('api-image-negative-prompt').value.trim();
          if(document.getElementById('me-bubble-css')) gConfig.bubbleCss = document.getElementById('me-bubble-css').value; 
          gConfig.chatBottomBarColor = document.getElementById('me-bottom-bar-color').value.trim(); gConfig.chatBottomTextColor = document.getElementById('me-bottom-text-color').value.trim(); gConfig.chatBottomIconColor = document.getElementById('me-bottom-icon-color').value.trim(); gConfig.fontUrl = document.getElementById('me-font-url').value.trim(); gConfig.font = document.getElementById('me-font').value; gConfig.globalFontSize = parseInt(document.getElementById('global-font-size').value) || 10; gConfig.appLabelFontSize = parseInt(document.getElementById('app-label-font-size').value) || 11; gConfig.homeBg = document.getElementById('me-home-bg-data').value; gConfig.swPhoto = document.getElementById('sw-photo-data') ? document.getElementById('sw-photo-data').value : ''; saveData(); applyGlobalConfigToUI(); if(currentContactId) renderChatHistory(); }
          

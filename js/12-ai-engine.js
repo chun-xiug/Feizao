@@ -1609,6 +1609,43 @@ ${c.memory}
                         }
                     }
 
+                    if (streamBuffer) {
+                        const trimmed = streamBuffer.trim();
+                        if (trimmed.startsWith('data: ')) {
+                            const jsonStr = trimmed.replace('data: ', '').trim();
+                            if (jsonStr !== '[DONE]') {
+                                try {
+                                    const parsed = JSON.parse(jsonStr);
+                                    const delta = parsed.choices?.[0]?.delta?.content || '';
+                                    rawReply += delta;
+
+                                    const isMessagesAppActive = document.getElementById('app-messages').classList.contains('active');
+                                    const isChatRoomOpen = document.getElementById('view-chat').classList.contains('slide-in');
+                                    const isLookingAtTarget = (currentContactId === targetContactId);
+                                    const isInRoom = isMessagesAppActive && isChatRoomOpen && isLookingAtTarget;
+
+                                    let chatLiveText = rawReply.replace(/<[^>]*>?/g, '').replace(/(bpm|affection|mood|thought|focus|facade|restraint|mind)\s*[:：]?\s*\d*/gi, '').trim();
+
+                                    if (isInRoom) {
+                                        if (tempId && document.getElementById(tempId)) document.getElementById(tempId).remove();
+                                        let liveEl = document.getElementById(liveBubbleId);
+                                        if (!liveEl) {
+                                            const ca = document.getElementById('chat-area');
+                                            liveEl = document.createElement('div');
+                                            liveEl.id = liveBubbleId;
+                                            liveEl.className = 'msg-row bot first-in-group last-in-group';
+                                            liveEl.innerHTML = `<div class="msg-avatar-wrap"><div class="msg-avatar">${renderAvatarHTML(c.chatAvatar || c.avatar, 'bot')}</div></div><div class="bubble-body"><div class="bubble bubble-bot">${chatLiveText || '...'}</div></div>`;
+                                            ca.appendChild(liveEl);
+                                        } else {
+                                            liveEl.querySelector('.bubble').innerText = chatLiveText || '...';
+                                        }
+                                        scrollToBottom();
+                                    }
+                                } catch(e) {}
+                            }
+                        }
+                    }
+
                     // 流式结束，移除实时气泡
                     if (document.getElementById(liveBubbleId)) document.getElementById(liveBubbleId).remove();
 
@@ -2425,17 +2462,58 @@ let currentWid = gConfig.currentWorldviewId || 'default';
                                  c.history.push({ role: 'assistant', content: locHtml.replace(/\n\s+/g, ''), isRevoked: false, timestamp: cardTs });
                                  c.history.push({ role: 'system_sum', content: `<i>✧ [${signName}] 给你发送了一个绝密坐标</i>` });
                              } else if (card.type === 'photo') {
-                                 let photoHtml = `
-                                 <div class="stamp-wrapper">
-                                     <div class="stamp-base">
-                                         <div class="stamp-inner">
-                                             <div class="stamp-postmark"></div>
-                                             <div class="stamp-circle"></div>
-                                             <div class="stamp-header">PAR AVION</div>
-                                             <div class="stamp-text">${card.desc}</div>
+                                 let photoHtml = '';
+                                 let imgId = 'ai-img-' + cardTs;
+                                 
+                                 if (gConfig.enableAiImage) {
+                                     let promptTpl = gConfig.aiImagePrompt || 'masterpiece, best quality, realistic, {desc}';
+                                     let finalPrompt = promptTpl.replace('{desc}', card.desc);
+                                     let apiType = gConfig.aiImageType || 'pollinations';
+
+                                     if (apiType === 'pollinations') {
+                                         let imgUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(finalPrompt)}?width=512&height=512&nologo=true`;
+                                         photoHtml = `
+                                         <div class="stamp-wrapper">
+                                             <div class="stamp-base" style="padding: 8px;">
+                                                 <div class="stamp-inner" style="padding: 0; border: none; background: transparent;">
+                                                     <img id="${imgId}" src="${imgUrl}" style="width: 100%; height: auto; border-radius: 4px; display: block;" alt="${card.desc}">
+                                                 </div>
+                                             </div>
+                                         </div><img src="1" onerror="this.parentNode.classList.add('bubble-clear'); this.remove();">`;
+                                     } else {
+                                         // 异步 API，先渲染 Loading 状态
+                                         photoHtml = `
+                                         <div class="stamp-wrapper">
+                                             <div class="stamp-base" style="padding: 8px;">
+                                                 <div class="stamp-inner" style="padding: 0; border: none; background: transparent; display: flex; justify-content: center; align-items: center; min-height: 200px;">
+                                                     <div id="${imgId}-loader" style="color: var(--c-gray-dark); font-size: 12px; font-weight: bold; display: flex; flex-direction: column; align-items: center; gap: 10px;">
+                                                         <i class="fa-solid fa-spinner fa-spin" style="font-size: 24px;"></i>
+                                                         <span>正在冲洗相片...</span>
+                                                     </div>
+                                                     <img id="${imgId}" src="" style="width: 100%; height: auto; border-radius: 4px; display: none;" alt="${card.desc}">
+                                                 </div>
+                                             </div>
+                                         </div><img src="1" onerror="this.parentNode.classList.add('bubble-clear'); this.remove();">`;
+                                         
+                                         // 触发异步请求
+                                         setTimeout(() => {
+                                             generateAsyncImage(apiType, finalPrompt, imgId, cardTs, c.id);
+                                         }, 100);
+                                     }
+                                 } else {
+                                     photoHtml = `
+                                     <div class="stamp-wrapper">
+                                         <div class="stamp-base">
+                                             <div class="stamp-inner">
+                                                 <div class="stamp-postmark"></div>
+                                                 <div class="stamp-circle"></div>
+                                                 <div class="stamp-header">PAR AVION</div>
+                                                 <div class="stamp-text">${card.desc}</div>
+                                             </div>
                                          </div>
-                                     </div>
-                                 </div><img src="1" onerror="this.parentNode.classList.add('bubble-clear'); this.remove();">`;
+                                     </div><img src="1" onerror="this.parentNode.classList.add('bubble-clear'); this.remove();">`;
+                                 }
+                                 
                                  c.history.push({ role: 'assistant', content: photoHtml.replace(/\n\s+/g, ''), isRevoked: false, timestamp: cardTs, photoDesc: card.desc });
                                  c.history.push({ role: 'system_sum', content: `<i>✧ [${signName}] 给你发送了一张实体相片</i>` });
                              } else if (card.type === 'luxury') {
@@ -2603,5 +2681,95 @@ let currentWid = gConfig.currentWorldviewId || 'default';
                  el.style.overflowY = el.scrollHeight > 100 ? "auto" : "hidden";
              } else {
                  el.style.overflowY = "hidden";
+             }
+         }
+
+         // ================= 异步生图引擎 =================
+         async function generateAsyncImage(apiType, prompt, imgId, msgTimestamp, contactId) {
+             const c = contacts.find(x => x.id === contactId);
+             if (!c) return;
+             
+             let finalImgSrc = '';
+             let errorMsg = '';
+             
+             try {
+                 if (apiType === 'openai') {
+                     const url = gConfig.aiImageUrl || 'https://api.openai.com/v1/images/generations';
+                     const key = gConfig.aiImageKey;
+                     const model = gConfig.aiImageModelOpenAI || 'dall-e-3';
+                     if (!key) throw new Error("未配置 OpenAI Key");
+                     
+                     const res = await fetch(url, {
+                         method: 'POST',
+                         headers: { 'Authorization': `Bearer ${key}`, 'Content-Type': 'application/json' },
+                         body: JSON.stringify({ model: model, prompt: prompt, n: 1, size: "1024x1024" })
+                     });
+                     if (!res.ok) throw new Error(`OpenAI 请求失败: ${res.status}`);
+                     const data = await res.json();
+                     if (data.data && data.data[0] && data.data[0].url) {
+                         finalImgSrc = data.data[0].url;
+                     } else {
+                         throw new Error("OpenAI 返回数据格式异常");
+                     }
+                 } else if (apiType === 'novelai') {
+                     const url = 'https://api.novelai.net/ai/generate-image'; // NovelAI 固定官方接口
+                     const key = gConfig.aiImageKey;
+                     const model = gConfig.aiImageModelNovelAI || 'nai-diffusion-3';
+                     const negPrompt = gConfig.aiImageNegativePrompt || '';
+                     if (!key) throw new Error("未配置 NovelAI Token");
+                     
+                     const res = await fetch(url, {
+                         method: 'POST',
+                         headers: { 'Authorization': `Bearer ${key}`, 'Content-Type': 'application/json' },
+                         body: JSON.stringify({ 
+                             input: prompt, 
+                             model: model, 
+                             action: "generate", 
+                             parameters: { 
+                                 width: 832, 
+                                 height: 1216,
+                                 undesired_content: negPrompt
+                             } 
+                         })
+                     });
+                     if (!res.ok) throw new Error(`NovelAI 请求失败: ${res.status}`);
+                     // NovelAI 通常返回二进制流
+                     const blob = await res.blob();
+                     finalImgSrc = await new Promise((resolve) => {
+                         const reader = new FileReader();
+                         reader.onloadend = () => resolve(reader.result);
+                         reader.readAsDataURL(blob);
+                     });
+                 }
+             } catch (e) {
+                 console.error("生图失败:", e);
+                 errorMsg = e.message;
+             }
+             
+             // 更新 DOM
+             const imgEl = document.getElementById(imgId);
+             const loaderEl = document.getElementById(`${imgId}-loader`);
+             
+             if (finalImgSrc) {
+                 if (imgEl) {
+                     imgEl.src = finalImgSrc;
+                     imgEl.style.display = 'block';
+                 }
+                 if (loaderEl) loaderEl.style.display = 'none';
+                 
+                 // 更新 History 确保持久化
+                 const targetMsg = c.history.find(m => m.timestamp === msgTimestamp && m.role === 'assistant');
+                 if (targetMsg) {
+                     // 替换掉 loader，显示图片，并填入真实的 src
+                     targetMsg.content = targetMsg.content
+                         .replace(/display:\s*flex;[^>]*id=["'][^"']+-loader["'][^>]*>[\s\S]*?<\/div>/i, 'display: none;">')
+                         .replace(/<img\s+id=["'][^"']+["']\s+src=["']["']\s+style=["']([^"']+)display:\s*none;([^"']*)["']/i, `<img id="${imgId}" src="${finalImgSrc}" style="$1display: block;$2"`);
+                     saveData();
+                 }
+             } else {
+                 // 失败处理
+                 if (loaderEl) {
+                     loaderEl.innerHTML = `<i class="fa-solid fa-triangle-exclamation" style="font-size: 24px; color: #D32F2F;"></i><span style="color: #D32F2F;">冲洗失败: ${errorMsg}</span>`;
+                 }
              }
          }
