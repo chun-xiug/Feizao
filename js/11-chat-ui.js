@@ -1056,11 +1056,16 @@ c.history[0].content = newPrompt;
          function updateBubbleGrouping() {
              const ca = document.getElementById('chat-area');
              if(!ca) return;
-             const rows = Array.from(ca.querySelectorAll('.msg-row:not(.sys-row)'));
-             rows.forEach((row, i) => {
+             const rows = ca.querySelectorAll('.msg-row:not(.sys-row)');
+             const len = rows.length;
+             if (len === 0) return;
+             
+             const start = Math.max(0, len - 3);
+             for (let i = start; i < len; i++) {
+                 let row = rows[i];
                  let isUser = row.classList.contains('user');
                  let prevRow = i > 0 ? rows[i-1] : null;
-                 let nextRow = i < rows.length - 1 ? rows[i+1] : null;
+                 let nextRow = i < len - 1 ? rows[i+1] : null;
                  
                  // 如果上一条不是我发的，那我就是这组的“头”
                  if (!prevRow || prevRow.classList.contains('user') !== isUser) row.classList.add('first-in-group');
@@ -1069,7 +1074,7 @@ c.history[0].content = newPrompt;
                  // 如果下一条不是我发的，那我就是这组的“尾”
                  if (!nextRow || nextRow.classList.contains('user') !== isUser) row.classList.add('last-in-group');
                  else row.classList.remove('last-in-group');
-             });
+             }
          }
          
          function enterChatMultiSelect() {

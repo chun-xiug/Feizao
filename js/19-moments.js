@@ -2201,8 +2201,11 @@ ${linkedInfoStr}
          
          function drawSnow() {
              if(!snowCtx) return;
+             
+             requestAnimationFrame(drawSnow);
+             
              var momentsEl = document.getElementById('view-main-moments');
-             if(!momentsEl || momentsEl.style.display === 'none' || document.hidden) {
+             if(!momentsEl || !momentsEl.classList.contains('active') || document.hidden) {
                  window._snowStopped = true;
                  return;
              }
@@ -2226,7 +2229,6 @@ ${linkedInfoStr}
                      else { f.x = Math.random() * snowWidth; f.y = -5; }
                  }
              }
-             requestAnimationFrame(drawSnow);
          }
          
          window.addEventListener('resize', () => {
