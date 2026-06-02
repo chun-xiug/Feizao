@@ -2863,6 +2863,50 @@
                      <input type="range" id="api-temp" min="0" max="2" step="0.1" value="0.7" oninput="document.getElementById('temp-val').innerText=this.value; saveGlobal()" style="width: 100%; margin-top: 10px; accent-color: var(--c-black); cursor: pointer;">
                   </div>
                </div>
+               <div class="settings-group" style="margin-top: 16px;">
+                  <div class="settings-item switch-container">
+                     <label style="margin:0;">启用 AI 角色生图 (替代文字相片)</label>
+                     <input type="checkbox" id="setting-ai-image" class="btn-switch" onchange="saveGlobal()">
+                  </div>
+                  <div class="settings-item">
+                     <label>生图 API 引擎</label>
+                     <select id="api-image-type" onchange="toggleAiImageInputs(); saveGlobal()">
+                        <option value="pollinations">Pollinations.ai (免费免配置)</option>
+                        <option value="openai">OpenAI (DALL-E)</option>
+                        <option value="novelai">NovelAI</option>
+                     </select>
+                  </div>
+                  <div id="ai-image-auth-group" style="display: none;">
+                     <div class="settings-item" id="ai-image-url-group">
+                        <label>生图 API URL</label>
+                        <input type="text" id="api-image-url" placeholder="例如: https://api.openai.com/v1/images/generations" onchange="saveGlobal()">
+                     </div>
+                     <div class="settings-item">
+                        <label>生图 API Key / Token</label>
+                        <input type="password" id="api-image-key" placeholder="sk-... 或 NovelAI Token" onchange="saveGlobal()">
+                     </div>
+                     <div class="settings-item" id="ai-image-model-group-openai" style="display: none;">
+                        <label>OpenAI 生图模型</label>
+                        <input type="text" id="api-image-model-openai" placeholder="例如: dall-e-3" onchange="saveGlobal()">
+                     </div>
+                     <div class="settings-item" id="ai-image-model-group-novelai" style="display: none;">
+                        <label>NovelAI 生图模型</label>
+                        <select id="api-image-model-novelai" onchange="saveGlobal()">
+                           <option value="nai-diffusion-3">NAI Diffusion V3 (二次元最新)</option>
+                           <option value="nai-diffusion">NAI Anime V2 (二次元旧版)</option>
+                           <option value="nai-diffusion-furry-3">NAI Furry V3 (Furry专属)</option>
+                        </select>
+                     </div>
+                  </div>
+                  <div class="settings-item">
+                     <label>正面提示词模板 ({desc}代表AI的描述)</label>
+                     <textarea id="api-image-prompt" style="width: 100%; background: rgba(0,0,0,0.04); border-radius: 12px; padding: 10px; border: none; outline: none; font-size: 12px; margin-top: 6px; resize: none; height: 60px;" placeholder="masterpiece, best quality, realistic, {desc}" onchange="saveGlobal()"></textarea>
+                  </div>
+                  <div class="settings-item" id="ai-image-negative-group" style="display: none;">
+                     <label>负面提示词 (Negative Prompt)</label>
+                     <textarea id="api-image-negative-prompt" style="width: 100%; background: rgba(0,0,0,0.04); border-radius: 12px; padding: 10px; border: none; outline: none; font-size: 12px; margin-top: 6px; resize: none; height: 60px;" placeholder="lowres, bad anatomy, bad hands, text, error, missing fingers..." onchange="saveGlobal()"></textarea>
+                  </div>
+               </div>
                <div style="display:flex; gap:10px; padding: 0 20px;">
                   <button class="btn-black" style="flex:1; margin:0;" onclick="saveGlobalApi()">保存配置</button>
                   <button class="btn-outline" id="btn-fetch" style="flex:1; margin:0; border-color:var(--c-gray-mid);" onclick="fetchModels()">拉取可用模型</button>
